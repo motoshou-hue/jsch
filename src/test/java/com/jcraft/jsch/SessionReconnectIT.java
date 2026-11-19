@@ -89,6 +89,9 @@ public class SessionReconnectIT {
   public void testReconnectWithExtraAlgorithms() throws Exception {
     JSch ssh = createRSAIdentity();
     Session session = createSession(ssh);
+    // Restrict host key algorithms to rsa-sha2 only (Dropbear supports neither), so the
+    // first connect reliably fails negotiation regardless of the built-in defaults.
+    session.setConfig("server_host_key", "rsa-sha2-512,rsa-sha2-256");
     try {
       doSftp(session, false);
       fail("exception expected");

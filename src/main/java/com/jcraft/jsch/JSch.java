@@ -45,12 +45,17 @@ public class JSch {
   static Hashtable<String, String> config = new Hashtable<>();
 
   static {
+    // Legacy SHA-1 era algorithms (diffie-hellman-group*-sha1, ssh-rsa/ssh-dss, CBC ciphers,
+    // MD5/SHA-1-96 MACs) are appended at the end of the default proposals for backward
+    // compatibility with old SSH servers. Modern algorithms stay first so negotiation with
+    // up-to-date servers is unchanged; the legacy tail is only used when the server offers
+    // nothing else.
     config.put("kex", Util.getSystemProperty("jsch.kex",
-        "mlkem768x25519-sha256,curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group-exchange-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,diffie-hellman-group14-sha256"));
+        "mlkem768x25519-sha256,curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group-exchange-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,diffie-hellman-group14-sha256,diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha1,diffie-hellman-group1-sha1"));
     config.put("server_host_key", Util.getSystemProperty("jsch.server_host_key",
-        "ssh-ed25519-cert-v01@openssh.com,ecdsa-sha2-nistp256-cert-v01@openssh.com,ecdsa-sha2-nistp384-cert-v01@openssh.com,ecdsa-sha2-nistp521-cert-v01@openssh.com,rsa-sha2-512-cert-v01@openssh.com,rsa-sha2-256-cert-v01@openssh.com,ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-512,rsa-sha2-256"));
+        "ssh-ed25519-cert-v01@openssh.com,ecdsa-sha2-nistp256-cert-v01@openssh.com,ecdsa-sha2-nistp384-cert-v01@openssh.com,ecdsa-sha2-nistp521-cert-v01@openssh.com,rsa-sha2-512-cert-v01@openssh.com,rsa-sha2-256-cert-v01@openssh.com,ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-512,rsa-sha2-256,ssh-rsa,ssh-dss"));
     // CASignatureAlgorithms: specifies which algorithms are allowed for signing of certificates
-    // by certificate authorities (CAs). Default matches OpenSSH 8.2+ (excludes ssh-rsa/SHA-1).
+    // by certificate authorities (CAs). Base list matches OpenSSH 8.2+ (excludes ssh-rsa/SHA-1).
     config.put("ca_signature_algorithms", Util.getSystemProperty("jsch.ca_signature_algorithms",
         "ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-512,rsa-sha2-256"));
     config.put("prefer_known_host_key_types",
@@ -62,13 +67,13 @@ public class JSch {
     config.put("enable_ext_info_in_auth",
         Util.getSystemProperty("jsch.enable_ext_info_in_auth", "yes"));
     config.put("cipher.s2c", Util.getSystemProperty("jsch.cipher",
-        "aes128-gcm@openssh.com,aes256-gcm@openssh.com,aes128-ctr,aes192-ctr,aes256-ctr"));
+        "aes128-gcm@openssh.com,aes256-gcm@openssh.com,aes128-ctr,aes192-ctr,aes256-ctr,aes128-cbc,aes192-cbc,aes256-cbc,rijndael-cbc@lysator.liu.se,3des-cbc,blowfish-cbc,cast128-cbc"));
     config.put("cipher.c2s", Util.getSystemProperty("jsch.cipher",
-        "aes128-gcm@openssh.com,aes256-gcm@openssh.com,aes128-ctr,aes192-ctr,aes256-ctr"));
+        "aes128-gcm@openssh.com,aes256-gcm@openssh.com,aes128-ctr,aes192-ctr,aes256-ctr,aes128-cbc,aes192-cbc,aes256-cbc,rijndael-cbc@lysator.liu.se,3des-cbc,blowfish-cbc,cast128-cbc"));
     config.put("mac.s2c", Util.getSystemProperty("jsch.mac",
-        "hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha1-etm@openssh.com,hmac-sha2-256,hmac-sha2-512,hmac-sha1"));
+        "hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha1-etm@openssh.com,hmac-sha2-256,hmac-sha2-512,hmac-sha1,hmac-sha1-96,hmac-md5,hmac-md5-96"));
     config.put("mac.c2s", Util.getSystemProperty("jsch.mac",
-        "hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha1-etm@openssh.com,hmac-sha2-256,hmac-sha2-512,hmac-sha1"));
+        "hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha1-etm@openssh.com,hmac-sha2-256,hmac-sha2-512,hmac-sha1,hmac-sha1-96,hmac-md5,hmac-md5-96"));
     config.put("compression.s2c", Util.getSystemProperty("jsch.compression", "none"));
     config.put("compression.c2s", Util.getSystemProperty("jsch.compression", "none"));
 
@@ -249,7 +254,7 @@ public class JSch {
     config.put("PreferredAuthentications", Util.getSystemProperty("jsch.preferred_authentications",
         "gssapi-with-mic,publickey,keyboard-interactive,password"));
     config.put("PubkeyAcceptedAlgorithms", Util.getSystemProperty("jsch.client_pubkey",
-        "ssh-ed25519-cert-v01@openssh.com,ecdsa-sha2-nistp256-cert-v01@openssh.com,ecdsa-sha2-nistp384-cert-v01@openssh.com,ecdsa-sha2-nistp521-cert-v01@openssh.com,rsa-sha2-512-cert-v01@openssh.com,rsa-sha2-256-cert-v01@openssh.com,ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-512,rsa-sha2-256"));
+        "ssh-ed25519-cert-v01@openssh.com,ecdsa-sha2-nistp256-cert-v01@openssh.com,ecdsa-sha2-nistp384-cert-v01@openssh.com,ecdsa-sha2-nistp521-cert-v01@openssh.com,rsa-sha2-512-cert-v01@openssh.com,rsa-sha2-256-cert-v01@openssh.com,ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-512,rsa-sha2-256,ssh-rsa,ssh-dss"));
     config.put("enable_pubkey_auth_query",
         Util.getSystemProperty("jsch.enable_pubkey_auth_query", "yes"));
     config.put("try_additional_pubkey_algorithms",
