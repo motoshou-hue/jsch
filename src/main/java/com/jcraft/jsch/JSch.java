@@ -55,10 +55,9 @@ public class JSch {
     config.put("server_host_key", Util.getSystemProperty("jsch.server_host_key",
         "ssh-ed25519-cert-v01@openssh.com,ecdsa-sha2-nistp256-cert-v01@openssh.com,ecdsa-sha2-nistp384-cert-v01@openssh.com,ecdsa-sha2-nistp521-cert-v01@openssh.com,rsa-sha2-512-cert-v01@openssh.com,rsa-sha2-256-cert-v01@openssh.com,ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-512,rsa-sha2-256,ssh-rsa,ssh-dss"));
     // CASignatureAlgorithms: specifies which algorithms are allowed for signing of certificates
-    // by certificate authorities (CAs). Base list matches OpenSSH 8.2+ (excludes ssh-rsa/SHA-1);
-    // ssh-rsa/ssh-dss are appended so legacy CAs can still be verified.
+    // by certificate authorities (CAs). Base list matches OpenSSH 8.2+ (excludes ssh-rsa/SHA-1).
     config.put("ca_signature_algorithms", Util.getSystemProperty("jsch.ca_signature_algorithms",
-        "ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-512,rsa-sha2-256,ssh-rsa,ssh-dss"));
+        "ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-512,rsa-sha2-256"));
     config.put("prefer_known_host_key_types",
         Util.getSystemProperty("jsch.prefer_known_host_key_types", "yes"));
     config.put("enable_strict_kex", Util.getSystemProperty("jsch.enable_strict_kex", "yes"));
